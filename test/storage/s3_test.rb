@@ -156,6 +156,32 @@ class S3Test < Test::Unit::TestCase
     end
   end
 
+  context "An attachment that uses S3 for storage and has a Symbol as the path" do
+    setup do
+      rebuild_model :storage => :s3,
+                    :bucket => "testing",
+                    :path => :file_path,
+                    :styles => {
+                       :thumb => "80x80>"
+                    },
+                    :s3_credentials => {
+                      'access_key_id' => "12345",
+                      'secret_access_key' => "54321"
+                    }
+
+      @dummy = Dummy.new
+      def @dummy.file_path
+        "custom/file/path/:filename"
+      end
+      @dummy.avatar = StringIO.new(".")
+      @avatar = @dummy.avatar
+    end
+
+    should "use an S3 object based on the correct path for the method symbol" do
+      assert_equal("custom/file/path/stringio.txt", @dummy.avatar.s3_object.key)
+    end
+  end
+
   context "s3_host_name" do
     setup do
       rebuild_model :storage => :s3,
